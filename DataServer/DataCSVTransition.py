@@ -2,11 +2,9 @@ import pandas as pd
 from datetime import datetime, timedelta
 import random
 from sqlalchemy import create_engine
-import os
-from dotenv import load_dotenv
+from EnvData import postgresql_url
 
 
-result = load_dotenv(dotenv_path=".env")
 time = datetime(2025, 10, 13, 11, 0, 0)
 regions = ["Алатауский", "Алмалинский", "Ауэзовский", "Бостандыкский", "Жетысуский", "Медеуский", "Наурызбайский", "Турксибский"]
 
@@ -41,13 +39,10 @@ csv_data["region"] = region_column
 csv_data["date"] = date_column
 csv_data["time"] = time_column
 csv_data = csv_data.rename(columns={"CO": "CO2"})
+csv_data = csv_data.rename(columns={"PM2.5": "PM2_5"})
 print(csv_data.columns.tolist())
 
 new_csv = pd.DataFrame(csv_data)
-user = os.getenv("DB_USER")
-password = os.getenv("DB_PASSWORD")
-host = os.getenv("DB_HOST")
-port = os.getenv("DB_PORT")
-dbname = os.getenv("DB_NAME")
-engine = create_engine(f"postgresql://{user}:{password}@{host}:{port}/{dbname}")
+
+engine = create_engine(postgresql_url)
 new_csv.to_sql("environment_data", engine, if_exists="replace", index=False)
