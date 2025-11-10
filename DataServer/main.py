@@ -1,13 +1,19 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI, WebSocket
 import json
 from sqlalchemy import create_engine, text
 import pandas as pd
 from EnvData import postgresql_url, secret_token
 from collections import deque, defaultdict
+from faststream.rabbit.fastapi import RabbitRouter
+from faststream.rabbit import RabbitBroker
 
+router = RabbitRouter()
 
 app = FastAPI()
 
+app.include_router(router)
 data_base = create_engine(postgresql_url)
 allowed_columns = {"Temperature", "Humidity", "pressure_level", "CO2", "PM2_5", "PM10", "noise_level", "region", "date", "time"}
 recent_data = defaultdict(lambda: deque(maxlen=10))
@@ -70,6 +76,9 @@ async def websocket_data_acceptation(websocket: WebSocket, token: str = None):
             if validated:
                 pd.DataFrame([validated]).to_sql("environment_data", data_base, if_exists="append", index=False)
                 recent_data[validated["region"]].append(validated)
+
+                await router.broker.publish(json.dumps(validated), queue="newRow")
+
 
     except Exception as e:
         print("Клиент отключился:", e)
