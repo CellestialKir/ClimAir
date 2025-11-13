@@ -6,7 +6,7 @@ import json
 from sqlalchemy import create_engine, text
 import pandas as pd
 from sqlalchemy.ext.asyncio import create_async_engine
-from EnvData import postgresql_url, secret_token
+from EnvData import postgresql_url, rabbit_uri
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -16,7 +16,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
-broker = RabbitBroker()
+broker = RabbitBroker(rabbit_uri)
 data_base = create_engine(postgresql_url)
 
 @app.on_event("startup")
