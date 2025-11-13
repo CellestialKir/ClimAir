@@ -3,5 +3,5 @@ uvicorn
 sqlalchemy
 pandas
 psycopg2-binary
-faststream
+faststream[rabbit]
 python-dotenv
