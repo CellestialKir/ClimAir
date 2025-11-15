@@ -46,8 +46,34 @@ async def handle_newRow(msg: str):
         print(f"Ошибка при обработке сообщения: {e}")
 
 @app.get("/getGraphStats")
-async def get_graph():
-    return {"message": f"Hello"}
+async def get_graph(interval: str = "year", region: str = "Алатау"):
+    try:
+        intervals = {
+            "year": "1 year",
+            "month": "1 month",
+            "day": "1 day"
+        }
+
+        with data_base.connect() as conn:
+            query = text(f"""
+                SELECT "PM2_5" AS pm25,
+                       "CO2" AS co2
+                FROM environment_data
+                WHERE region = :region
+                AND to_timestamp(date, 'YYYY-MM-DD') 
+                    BETWEEN NOW() - INTERVAL '{intervals[interval]}' AND NOW()
+            """)
+
+            result = conn.execute(query, {"region": region}).mappings().all()
+
+        return {"data": result}
+
+    except Exception as e:
+        print(f"Ошибка при обработке сообщения: {e}")
+        return {"error": "Server error"}
+
+
+
 
 
 @app.get("/getAllStats")
