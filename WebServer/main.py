@@ -54,17 +54,33 @@ async def get_graph(interval: str = "year", region: str = "Алатау"):
             "day": "1 day"
         }
 
+        group_by_rules = {
+            "year": "DATE_TRUNC('month', to_timestamp(date, 'YYYY-MM-DD')) + "
+                    "((EXTRACT(day FROM to_timestamp(date, 'YYYY-MM-DD'))-1)/15)::int * interval '15 day'",
+
+            "month": "DATE_TRUNC('day', to_timestamp(date, 'YYYY-MM-DD'))",
+
+            "day": "DATE_TRUNC('hour', to_timestamp(date, 'YYYY-MM-DD'))"
+        }
+
         with data_base.connect() as conn:
             query = text(f"""
-                SELECT "PM2_5" AS pm25,
-                       "CO2" AS co2
+                SELECT 
+                    AVG("PM2_5") AS pm25,
+                    AVG("CO2") AS co2,
+                    {group_by_rules[interval]} AS ts
                 FROM environment_data
                 WHERE region = :region
-                AND to_timestamp(date, 'YYYY-MM-DD') 
+                AND to_timestamp(date, 'YYYY-MM-DD')
                     BETWEEN NOW() - INTERVAL '{intervals[interval]}' AND NOW()
+                GROUP BY ts
+                ORDER BY ts
             """)
 
-            result = conn.execute(query, {"region": region}).mappings().all()
+            result = pd.DataFrame(conn.execute(query, {"region": region}).mappings().all())
+            if interval != "day":
+                result["ts"] = result["ts"].astype(str).str.split("T").str[0]
+
 
         return {"data": result}
 

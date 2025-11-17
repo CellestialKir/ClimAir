@@ -1,0 +1,131 @@
+.body{
+    background-color:hsla(201, 56%, 72%, 0.8);
+}
+
+.header{
+    width: 1188px;
+    height: 90px;
+    background-color: hsla(201, 56%, 72%, 0);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 24px;
+    color: white;
+    position: fixed;
+    top: 0;
+    left: 300px;
+    z-index: 1000;
+
+}
+
+
+
+/* Logo */
+
+.Logo_container{
+    align-items: center;
+    justify-content: flex-start;
+    text-align: left;
+}
+.Logo{
+    margin-top: 10px;
+    width: 160px;
+    height: 90px;
+    margin-left: 10px;
+    object-fit:contain;
+    
+    
+
+}
+
+
+/* Button */
+
+.Button_container{
+    display: inline-flex;
+    width: 400px;
+    height: 90px;
+    justify-content: space-between;
+    align-items: center;
+    text-align: right;
+ 
+   
+}
+
+/* SwitchTheme */
+
+.SwitchTheme{   
+    width: 70px;
+    height: 34px;
+    background-color:#66D9FF;
+    border-radius: 30px;
+    display: inline-flex;
+    justify-content: space-around;
+}
+
+.SwitchTheme .Light,
+.SwitchTheme .Dark{
+    width: 25px;
+    height: 25px;
+    margin-top: 4.5px;
+    
+    background-color: rgba(255, 255, 255, 0.858);
+    border-radius: 50%;
+    display: flex;
+    overflow: hidden;
+}
+
+.SwitchTheme .Dark{
+    background-color: #66D9FF;
+    
+}
+
+.SwitchTheme .Dark img{
+    filter: invert(1);
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.SwitchTheme .Light img{
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+
+
+
+
+
+/* District */
+.District{
+    width: 130px;
+    height: 50px;
+    background-color:#66D9FF;
+    border-radius: 20px;
+    
+}
+.District .text{
+    margin-top: 12px;
+    text-align: center;
+    font-size: 16px;
+   
+}
+
+
+/* User */
+.User{
+    width: 60px;
+    height: 60px;
+    margin-right: 20px;
+    background-color: hsla(201, 56%, 72%, 0.8);
+    border-radius: 50%;
+}
+
+.User .UserLogo{
+
+   width: 45px;
+   height: 45px;
+   padding: 7px;
+}
