@@ -4,14 +4,24 @@ from fastapi import FastAPI, WebSocket
 import json
 from sqlalchemy import create_engine, text
 import pandas as pd
-from EnvData import postgresql_url, secret_token
+from EnvData import postgresql_url, secret_token, rabbit_uri
 from collections import deque, defaultdict
 from faststream.rabbit.fastapi import RabbitRouter
 from faststream.rabbit import RabbitBroker
 
-router = RabbitRouter()
+router = RabbitRouter(rabbit_uri)
 
-app = FastAPI()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await router.startup()
+    print("RabbitMQ broker started")
+
+    yield
+
+    await router.shutdown()
+    print("RabbitMQ broker stopped")
+
+app = FastAPI(lifespan=lifespan)
 
 app.include_router(router)
 data_base = create_engine(postgresql_url)
@@ -19,6 +29,7 @@ allowed_columns = {"Temperature", "Humidity", "pressure_level", "CO2", "PM2_5", 
 recent_data = defaultdict(lambda: deque(maxlen=10))
 
 def validate_data(data):
+    print("лаут")
     required = ["date", "time", "region"]
     for key in required:
         if key not in data or not data[key]:

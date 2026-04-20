@@ -5,8 +5,8 @@ from sqlalchemy import create_engine
 from EnvData import postgresql_url
 
 
-time = datetime(2025, 10, 13, 11, 0, 0)
-regions = ["Алатауский", "Алмалинский", "Ауэзовский", "Бостандыкский", "Жетысуский", "Медеуский", "Наурызбайский", "Турксибский"]
+time = datetime(2025, 12, 28, 11, 0, 0)
+regions = ["Alatau", "Almalinsky", "Auezovsky", "Bostandyksky", "Zhetysusky", "Medeusky", "Nauryzbaysky", "Turksibsky"]
 
 csv_data = pd.read_csv("updated_pollution_dataset.csv")
 
