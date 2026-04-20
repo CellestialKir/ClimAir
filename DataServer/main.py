@@ -21,7 +21,7 @@ app = FastAPI(lifespan=lifespan)
 
 app.include_router(router)
 data_base = create_engine(postgresql_url)
-allowed_columns = {"Temperature", "Humidity", "pressure_level", "CO2", "PM2_5", "PM10", "noise_level", "region", "date", "time"}
+allowed_columns = {"temperature", "humidity", "pressure_level", "co2", "pm2_5", "pm10", "noise_level", "region", "date", "time"}
 recent_data = defaultdict(lambda: deque(maxlen=10))
 
 
@@ -29,13 +29,10 @@ def validate_data(data):
     print("Validating...")
     required = ["date", "time", "region"]
 
-    # 1. Базовая проверка обязательных полей
     if not all(data.get(k) for k in required):
         return None
-
     region = data["region"]
-
-    clean_payload = {k: v for k, v in data.items() if k in allowed_columns}
+    clean_payload = {k.lower(): v for k, v in data.items() if k.lower() in [c.lower() for c in allowed_columns]}
 
     history_df = None
     if recent_data[region]:
@@ -69,19 +66,25 @@ def validate_data(data):
 @app.websocket("/ws/data")
 async def websocket_data_acceptation(websocket: WebSocket, token: str = None):
     if token != secret_token:
+        print("Invalid token")
         await websocket.close(code=1008)
         return
 
     await websocket.accept()
+    print("--- СОЕДИНЕНИЕ УСТАНОВЛЕНО ---", flush=True)
     try:
         while True:
             raw_data = await websocket.receive_text()
+            print(raw_data)
             payload = json.loads(raw_data)
+            print(payload)
+            payload = {k.lower(): v for k, v in payload.items()}
             validated = validate_data(payload)
 
             if validated:
                 print(f"Запись данных в БД: {validated}")
-                pd.DataFrame([validated]).to_sql(
+                final_data = {k: v for k, v in validated.items() if k in allowed_columns}
+                pd.DataFrame([final_data]).to_sql(
                     "environment_data",
                     data_base,
                     if_exists="append",
@@ -95,4 +98,8 @@ async def websocket_data_acceptation(websocket: WebSocket, token: str = None):
                 print("Данные не прошли валидацию!")
 
     except Exception as e:
-        print(f"Connection closed for {websocket.client}: {e}")
+        # print(f"Connection closed for {websocket.client}: {e}")
+        import traceback
+        print("ОШИБКА В ЦИКЛЕ WS:")
+        traceback.print_exc()
+        print("Клиент отключился:", e)

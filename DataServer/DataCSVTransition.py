@@ -51,17 +51,19 @@ from EnvData import postgresql_url
 engine = create_engine(postgresql_url)
 with engine.connect() as conn:
     query = text(f"""
+        DROP TABLE IF EXISTS environment_data;
+    
         CREATE TABLE environment_data (
         id BIGSERIAL PRIMARY KEY,
         region VARCHAR(100) NOT NULL,
         date DATE NOT NULL,
         time TIME NOT NULL,
-        Temperature FLOAT,
-        Humidity FLOAT,
+        temperature FLOAT,
+        humidity FLOAT,
         pressure_level FLOAT,
-        CO2 FLOAT,
-        PM2_5 FLOAT,
-        PM10 FLOAT,
+        co2 FLOAT,
+        pm2_5 FLOAT,
+        pm10 FLOAT,
         noise_level FLOAT);
         
         CREATE INDEX idx_date ON environment_data (date);
