@@ -8,9 +8,9 @@ from EnvData import postgresql_url
 time = datetime(2025, 12, 28, 11, 0, 0)
 regions = ["Alatau", "Almalinsky", "Auezovsky", "Bostandyksky", "Zhetysusky", "Medeusky", "Nauryzbaysky", "Turksibsky"]
 
-csv_data = pd.read_csv("updated_pollution_dataset.csv")
+# csv_data = pd.read_csv("updated_pollution_dataset.csv")
 
-csv_data.drop(['NO2', 'SO2','Proximity_to_Industrial_Areas', 'Population_Density', 'Air Quality'], axis=1, inplace=True)
+# csv_data.drop(['NO2', 'SO2','Proximity_to_Industrial_Areas', 'Population_Density', 'Air Quality'], axis=1, inplace=True)
 
 region_counter = 0
 date_counter = 0

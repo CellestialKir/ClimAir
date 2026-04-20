@@ -16,6 +16,7 @@ RUN uv pip install --system --no-cache \
     websockets \
     sqlalchemy \
     pandas \
+    dotenv\
     psycopg2-binary \
     faststream[rabbit]
 
