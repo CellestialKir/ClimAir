@@ -24,68 +24,72 @@ data_base = create_engine(postgresql_url)
 allowed_columns = {"Temperature", "Humidity", "pressure_level", "CO2", "PM2_5", "PM10", "noise_level", "region", "date", "time"}
 recent_data = defaultdict(lambda: deque(maxlen=10))
 
+
 def validate_data(data):
     print("Validating...")
     required = ["date", "time", "region"]
-    for key in required:
-        if key not in data or not data[key]:
-            return None
+
+    # 1. Базовая проверка обязательных полей
+    if not all(data.get(k) for k in required):
+        return None
 
     region = data["region"]
-    region_history = recent_data.get(region)
 
+    clean_payload = {k: v for k, v in data.items() if k in allowed_columns}
 
-    if not region_history:
-        for key, value in data.items():
-            if key not in allowed_columns:
-                return None
-            if value in (None, "", "null"):
-                with data_base.connect() as conn:
-                    query = text(f"""
-                                        SELECT AVG({key}) AS avg_value
-                                        FROM (
-                                            SELECT {key}
-                                            FROM environment_data
-                                            WHERE region = :region
-                                            ORDER BY date DESC, time DESC
-                                            LIMIT 10
-                                        ) AS recent_data
-                                    """)
-                    result = conn.execute(query, {"region": data["region"]}).fetchone()
-                    avg_val = result.avg_value if result and result.avg_value is not None else None
-                    if avg_val is not None:
-                        data[key] = round(avg_val, 2)
-                    else:
-                        return None
-        return data
+    history_df = None
+    if recent_data[region]:
+        history_df = pd.DataFrame(list(recent_data[region]))
     else:
-        history_df = pd.DataFrame(list(region_history))
-        for key, value in data.items():
-            if value in (None, "", "null"):
-                if key in history_df.columns:
-                    data[key] = round(history_df[key].mean(), 2)
+        with data_base.connect() as conn:
+            query = text("""
+                SELECT * FROM environment_data 
+                WHERE region = :region 
+                ORDER BY date DESC, time DESC 
+                LIMIT 10
+            """)
+            db_data = pd.read_sql(query, conn, params={"region": region})
+            if not db_data.empty:
+                history_df = db_data
 
-        return data
+    for key in allowed_columns:
+        if clean_payload.get(key) in (None, "", "null"):
+            if history_df is not None and key in history_df.columns:
+                avg_val = history_df[key].replace("null", None).mean()
+                if pd.notnull(avg_val):
+                    clean_payload[key] = round(float(avg_val), 2)
+                else:
+                    clean_payload[key] = 0
+            else:
+                clean_payload[key] = 0
+
+    return clean_payload
 
 
 @app.websocket("/ws/data")
 async def websocket_data_acceptation(websocket: WebSocket, token: str = None):
     if token != secret_token:
-        await websocket.close()
-        print("Неверный токен")
+        await websocket.close(code=1008)
         return
+
     await websocket.accept()
     try:
         while True:
-            data = await websocket.receive_text()
-            payload = json.loads(data)
+            raw_data = await websocket.receive_text()
+            payload = json.loads(raw_data)
             validated = validate_data(payload)
+
             if validated:
-                pd.DataFrame([validated]).to_sql("environment_data", data_base, if_exists="append", index=False)
+                pd.DataFrame([validated]).to_sql(
+                    "environment_data",
+                    data_base,
+                    if_exists="append",
+                    index=False,
+                    method='multi'
+                )
+
                 recent_data[validated["region"]].append(validated)
-
-                await router.broker.publish(json.dumps(validated), queue="newRow")
-
+                await router.broker.publish(validated, queue="newRow")  # FastStream сам сериализует dict
 
     except Exception as e:
-        print("Клиент отключился:", e)
+        print(f"Connection closed for {websocket.client}: {e}")
