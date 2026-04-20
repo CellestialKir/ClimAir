@@ -13,13 +13,9 @@ router = RabbitRouter(rabbit_uri)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    await router.startup()
-    print("RabbitMQ broker started")
-
+    print("Start")
     yield
-
-    await router.shutdown()
-    print("RabbitMQ broker stopped")
+    print("stop")
 
 app = FastAPI(lifespan=lifespan)
 
@@ -29,7 +25,7 @@ allowed_columns = {"Temperature", "Humidity", "pressure_level", "CO2", "PM2_5", 
 recent_data = defaultdict(lambda: deque(maxlen=10))
 
 def validate_data(data):
-    print("лаут")
+    print("Validating...")
     required = ["date", "time", "region"]
     for key in required:
         if key not in data or not data[key]:
