@@ -80,6 +80,7 @@ async def websocket_data_acceptation(websocket: WebSocket, token: str = None):
             validated = validate_data(payload)
 
             if validated:
+                print(f"Запись данных в БД: {validated}")
                 pd.DataFrame([validated]).to_sql(
                     "environment_data",
                     data_base,
@@ -89,7 +90,9 @@ async def websocket_data_acceptation(websocket: WebSocket, token: str = None):
                 )
 
                 recent_data[validated["region"]].append(validated)
-                await router.broker.publish(validated, queue="newRow")  # FastStream сам сериализует dict
+                await router.broker.publish(validated, queue="newRow")
+            else:
+                print("Данные не прошли валидацию!")
 
     except Exception as e:
         print(f"Connection closed for {websocket.client}: {e}")
