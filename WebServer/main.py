@@ -36,7 +36,7 @@ async def handle_newRow(msg: dict):
             query = text("""
                 INSERT INTO environment_data ("temperature", "humidity", "pressure_level", "co2", "pm2_5", "pm10",
                  "noise_level", "region", "date", "time")
-                VALUES (:Temperature, :Humidity, :pressure_level, :CO2, :PM2_5, :PM10,
+                VALUES (:temperature, :humidity, :pressure_level, :co2, :pm2_5, :pm10,
                         :noise_level, :region, :date, :time)
             """)
             conn.execute(query, data)
@@ -66,8 +66,8 @@ async def get_graph(interval: str = "year", region: str = "Алатау"):
         with data_base.connect() as conn:
             query = text(f"""
                 SELECT 
-                    AVG("PM2_5") AS pm25,
-                    AVG("CO2") AS co2,
+                    AVG("pm2_5") AS pm25,
+                    AVG("co2") AS co2,
                     {group_by_rules[interval]} AS ts
                 FROM environment_data
                 WHERE region = :region
@@ -102,8 +102,8 @@ async def get_stats_by_region():
         with data_base.connect() as conn:
             query = text("""
                 SELECT region,
-                       AVG("PM2_5") AS avg_pm25,
-                       AVG("CO2") AS avg_co2
+                       AVG("pm2_5") AS avg_pm25,
+                       AVG("co2") AS avg_co2
                 FROM environment_data
                 WHERE to_timestamp(date, 'YYYY-MM-DD') BETWEEN NOW() - INTERVAL '1 year' AND NOW()
                 GROUP BY region
