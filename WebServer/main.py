@@ -28,10 +28,10 @@ async def stop_broker():
     await broker.close()
 
 @broker.subscriber("newRow")
-async def handle_newRow(msg: str):
+async def handle_newRow(msg: dict):
     print(msg)
     try:
-        data = json.loads(msg)
+        data = msg
         with data_base.connect() as conn:
             query = text("""
                 INSERT INTO environment_data ("temperature", "humidity", "pressure_level", "co2", "pm2_5", "pm10",
