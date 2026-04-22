@@ -45,8 +45,9 @@ async def handle_newRow(msg: dict):
     except Exception as e:
         print(f"Ошибка при обработке сообщения: {e}")
 
+
 @app.get("/getGraphStats")
-async def get_graph(interval: str = "year", region: str = "Алатау"):
+async def get_graph(interval: str = "year", region: str = "Almaly"):
     try:
         intervals = {
             "year": "1 year",
@@ -55,12 +56,9 @@ async def get_graph(interval: str = "year", region: str = "Алатау"):
         }
 
         group_by_rules = {
-            "year": "DATE_TRUNC('month', to_timestamp(date, 'YYYY-MM-DD')) + "
-                    "((EXTRACT(day FROM to_timestamp(date, 'YYYY-MM-DD'))-1)/15)::int * interval '15 day'",
-
-            "month": "DATE_TRUNC('day', to_timestamp(date, 'YYYY-MM-DD'))",
-
-            "day": "DATE_TRUNC('hour', to_timestamp(date, 'YYYY-MM-DD'))"
+            "year": "DATE_TRUNC('month', date::timestamp) + ((EXTRACT(day FROM date::timestamp)-1)/15)::int * interval '15 day'",
+            "month": "DATE_TRUNC('day', date::timestamp)",
+            "day": "DATE_TRUNC('hour', date::timestamp)"
         }
 
         with data_base.connect() as conn:
@@ -71,30 +69,27 @@ async def get_graph(interval: str = "year", region: str = "Алатау"):
                     {group_by_rules[interval]} AS ts
                 FROM environment_data
                 WHERE region = :region
-                AND to_timestamp(date, 'YYYY-MM-DD')
-                    BETWEEN NOW() - INTERVAL '{intervals[interval]}' AND NOW()
+                AND date::timestamp BETWEEN NOW() - INTERVAL '{intervals[interval]}' AND NOW()
                 GROUP BY ts
                 ORDER BY ts
             """)
 
-            result = pd.DataFrame(conn.execute(query, {"region": region}).mappings().all())
-            if interval != "day":
-                result["ts"] = result["ts"].astype(str).str.split("T").str[0]
+            result_proxy = conn.execute(query, {"region": region})
+            df = pd.DataFrame(result_proxy.mappings().all())
 
+            if not df.empty and interval != "day":
+                df["ts"] = df["ts"].astype(str).str.split(" ").str[0]
 
-        return {"data": result}
+        return {"data": df.to_dict(orient="records")}
 
     except Exception as e:
         print(f"Ошибка при обработке сообщения: {e}")
-        return {"error": "Server error"}
-
-
-
-
+        return {"error": str(e)}
 
 @app.get("/getAllStats")
 async def say_hello():
     return {"message": f"Hello"}
+
 
 @app.get("/getStatsByRegion")
 async def get_stats_by_region():
@@ -105,10 +100,12 @@ async def get_stats_by_region():
                        AVG("pm2_5") AS avg_pm25,
                        AVG("co2") AS avg_co2
                 FROM environment_data
-                WHERE to_timestamp(date, 'YYYY-MM-DD') BETWEEN NOW() - INTERVAL '1 year' AND NOW()
+                WHERE date::timestamp BETWEEN NOW() - INTERVAL '1 year' AND NOW()
                 GROUP BY region
             """)
             result = conn.execute(query).mappings().all()
-            return {"data": result}
+
+            return {"data": [dict(row) for row in result]}
     except Exception as e:
-        print(f"Ошибка при обработке сообщения: {e}")
+        print(f"Ошибка в get_stats_by_region: {e}")
+        return {"error": str(e)}
