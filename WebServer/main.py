@@ -34,7 +34,7 @@ async def handle_newRow(msg: str):
         data = json.loads(msg)
         with data_base.connect() as conn:
             query = text("""
-                INSERT INTO environment_data ("Temperature", "Humidity", "pressure_level", "CO2", "PM2_5", "PM10",
+                INSERT INTO environment_data ("temperature", "humidity", "pressure_level", "co2", "pm2_5", "pm10",
                  "noise_level", "region", "date", "time")
                 VALUES (:Temperature, :Humidity, :pressure_level, :CO2, :PM2_5, :PM10,
                         :noise_level, :region, :date, :time)
