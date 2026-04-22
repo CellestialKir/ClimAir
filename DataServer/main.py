@@ -50,7 +50,7 @@ def validate_data(data):
                 history_df = db_data
 
     for key in allowed_columns:
-        if clean_payload.get(key) in (None, "", "null"):
+        if clean_payload.get(key) in (None, "", "null", 0):
             if history_df is not None and key in history_df.columns:
                 avg_val = history_df[key].replace("null", None).mean()
                 if pd.notnull(avg_val):
