@@ -7,6 +7,7 @@ from sqlalchemy import create_engine, text
 import pandas as pd
 from sqlalchemy.ext.asyncio import create_async_engine
 from EnvData import postgresql_url, rabbit_uri
+from fastapi.middleware.cors import CORSMiddleware
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -18,6 +19,21 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 broker = RabbitBroker(rabbit_uri)
 data_base = create_engine(postgresql_url)
+
+origins = [
+    "http://localhost:5173",    # Твой локальный React-фронтенд на Vite
+    "http://localhost:3000",    # На случай, если запустишь на Create React App
+    "https://my-cool-app.vercel.app", # Адрес твоего фронтенда на деплое (когда появится)
+]
+
+# 2. Добавляем CORSMiddleware в приложение
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,           # Разрешенные адреса
+    allow_credentials=True,          # Разрешить отправку кук и авторизационных заголовков
+    allow_methods=["*"],             # Разрешить все HTTP-методы (GET, POST, PUT, DELETE и т.д.)
+    allow_headers=["*"],             # Разрешить все HTTP-заголовки
+)
 
 @app.on_event("startup")
 async def start_broker():
