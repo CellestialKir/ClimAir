@@ -1,5 +1,6 @@
 fastapi~=0.121.0
 uvicorn
+typing
 sqlalchemy~=2.0.44
 pandas~=2.3.3
 psycopg2-binary

@@ -1,4 +1,5 @@
-from datetime import date, time
+from datetime import date as dt_date
+from datetime import time as dt_time
 from sqlmodel import Field, SQLModel
 
 
@@ -13,5 +14,5 @@ class EnvironmentData(SQLModel, table=True):
     pm10: float
     noise_level: float
     region: str = Field(index=True)
-    date: date
-    time: time
+    date: dt_date = Field(index=True)
+    time: dt_time
