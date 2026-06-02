@@ -9,6 +9,10 @@ host = os.getenv("DB_HOST")
 port = os.getenv("DB_PORT")
 dbname = os.getenv("DB_NAME")
 secret_token = os.getenv("SECRET_TOKEN")
-postgresql_url = f"postgresql://{user}:{password}@{host}.oregon-postgres.render.com/{dbname}"
+# postgresql_url = f"postgresql://{user}:{password}@{host}.oregon-postgres.render.com/{dbname}"
+postgresql_url = (
+    f"postgresql+psycopg2://{user}:{password}"
+    f"@{host}.oregon-postgres.render.com:{port}/{dbname}"
+)
 rabbit_uri = os.getenv("RABBIT_URI")
 
